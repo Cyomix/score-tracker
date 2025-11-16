@@ -123,17 +123,6 @@ export default function Home() {
 
   return (
     <div className="h-screen w-screen flex flex-col overflow-hidden">
-      {/* Portrait mode overlay */}
-      <div className="portrait:flex hidden fixed inset-0 bg-gray-900 z-50 items-center justify-center text-white text-center p-8">
-        <div className="flex flex-col items-center gap-4">
-          <svg className="w-24 h-24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-          <h2 className="text-3xl font-bold">Please Rotate Your Device</h2>
-          <p className="text-xl text-gray-300">This app works best in landscape mode</p>
-        </div>
-      </div>
-
       {/* Reset button */}
       <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10">
         <button
@@ -144,11 +133,11 @@ export default function Home() {
         </button>
       </div>
 
-      {/* Score tracking area */}
-      <div className="flex flex-1 h-full">
+      {/* Score tracking area - vertical in portrait, horizontal in landscape */}
+      <div className="flex flex-col landscape:flex-row flex-1 h-full w-full">
         {/* Blue side */}
         <div
-          className="w-1/2 bg-blue-500 flex items-center justify-center select-none"
+          className="w-full h-1/2 landscape:w-1/2 landscape:h-full bg-blue-500 flex items-center justify-center select-none"
           onMouseDown={handleBluePress}
           onMouseUp={handleBlueRelease}
           onMouseLeave={handleBlueRelease}
@@ -184,7 +173,7 @@ export default function Home() {
 
         {/* Red side */}
         <div
-          className="w-1/2 bg-red-500 flex items-center justify-center select-none"
+          className="w-full h-1/2 landscape:w-1/2 landscape:h-full bg-red-500 flex items-center justify-center select-none"
           onMouseDown={handleRedPress}
           onMouseUp={handleRedRelease}
           onMouseLeave={handleRedRelease}
