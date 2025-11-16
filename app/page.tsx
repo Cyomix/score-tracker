@@ -8,12 +8,29 @@ export default function Home() {
   const [editingBlue, setEditingBlue] = useState(false);
   const [editingRed, setEditingRed] = useState(false);
   const [editValue, setEditValue] = useState('');
+  const [isPortrait, setIsPortrait] = useState(false);
 
   const blueHoldTimer = useRef<NodeJS.Timeout | null>(null);
   const redHoldTimer = useRef<NodeJS.Timeout | null>(null);
   const editInputRef = useRef<HTMLInputElement>(null);
   const shouldIncrementBlue = useRef(false);
   const shouldIncrementRed = useRef(false);
+
+  // Track orientation changes
+  useEffect(() => {
+    const checkOrientation = () => {
+      setIsPortrait(window.matchMedia('(orientation: portrait)').matches);
+    };
+
+    checkOrientation();
+    window.addEventListener('resize', checkOrientation);
+    window.addEventListener('orientationchange', checkOrientation);
+
+    return () => {
+      window.removeEventListener('resize', checkOrientation);
+      window.removeEventListener('orientationchange', checkOrientation);
+    };
+  }, []);
 
   // Focus input when editing mode is activated
   useEffect(() => {
@@ -159,20 +176,40 @@ export default function Home() {
         </div>
       )}
 
-      {/* Rotated container for portrait mode */}
-      <div className="h-full w-full portrait:rotate-90 portrait:w-screen portrait:h-screen">
-        {/* Reset button */}
-        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 portrait:-rotate-90">
-          <button
-            onClick={handleReset}
-            className="bg-white text-gray-800 px-6 py-3 rounded-lg shadow-lg font-semibold hover:bg-gray-100 active:bg-gray-200 transition-colors"
+      {/* Container for portrait mode rotation */}
+      <div className="relative h-full w-full overflow-hidden">
+        <div
+          style={{
+            transformOrigin: 'center center',
+            position: isPortrait ? 'absolute' : 'relative',
+            inset: isPortrait ? 0 : 'auto',
+          }}
+        >
+          <div
+            style={{
+              width: isPortrait ? '100vh' : '100%',
+              height: isPortrait ? '100vw' : '100%',
+              transform: isPortrait ? 'translate(-50%, -50%) rotate(90deg)' : 'none',
+              position: isPortrait ? 'absolute' : 'relative',
+              left: isPortrait ? '50%' : 'auto',
+              top: isPortrait ? '50%' : 'auto',
+            }}
           >
-            Reset
-          </button>
-        </div>
+            {/* Reset button */}
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10">
+              <button
+                onClick={handleReset}
+                className="bg-white text-gray-800 px-6 py-3 rounded-lg shadow-lg font-semibold hover:bg-gray-100 active:bg-gray-200 transition-colors"
+                style={{
+                  transform: isPortrait ? 'rotate(-90deg)' : 'none',
+                }}
+              >
+                Reset
+              </button>
+            </div>
 
-        {/* Score tracking area - always horizontal (blue left, red right) */}
-        <div className="flex flex-row h-full w-full">
+            {/* Score tracking area - always horizontal (blue left, red right) */}
+            <div className="flex flex-row h-full w-full">
           {/* Blue side - LEFT */}
           <div
             className="w-1/2 h-full bg-blue-500 flex items-center justify-center select-none"
@@ -201,6 +238,8 @@ export default function Home() {
             <span className="text-white text-9xl font-bold pointer-events-none rotate-180">
               {redScore}
             </span>
+          </div>
+        </div>
           </div>
         </div>
       </div>
