@@ -18,10 +18,11 @@ export default function Home() {
   // Focus input when editing mode is activated
   useEffect(() => {
     if ((editingBlue || editingRed) && editInputRef.current) {
-      setTimeout(() => {
-        editInputRef.current?.focus();
-        editInputRef.current?.select();
-      }, 100);
+      // Immediate focus for keyboard
+      editInputRef.current.focus();
+      editInputRef.current.select();
+      // Try to trigger mobile keyboard
+      editInputRef.current.click();
     }
   }, [editingBlue, editingRed]);
 
@@ -138,6 +139,7 @@ export default function Home() {
               value={editValue}
               onChange={(e) => handleEditChange(e.target.value)}
               className="text-6xl font-bold text-center border-4 border-gray-300 rounded-lg w-full p-4 outline-none focus:border-blue-500"
+              autoFocus
             />
             <div className="flex gap-4 w-full">
               <button
@@ -169,24 +171,9 @@ export default function Home() {
           </button>
         </div>
 
-        {/* Score tracking area - always horizontal (red left, blue right) */}
+        {/* Score tracking area - always horizontal (blue left, red right) */}
         <div className="flex flex-row h-full w-full">
-          {/* Red side - LEFT */}
-          <div
-            className="w-1/2 h-full bg-red-500 flex items-center justify-center select-none"
-            onMouseDown={handleRedPress}
-            onMouseUp={handleRedRelease}
-            onMouseLeave={handleRedRelease}
-            onTouchStart={handleRedPress}
-            onTouchEnd={handleRedRelease}
-            style={{ touchAction: 'none' }}
-          >
-            <span className="text-white text-9xl font-bold pointer-events-none">
-              {redScore}
-            </span>
-          </div>
-
-          {/* Blue side - RIGHT */}
+          {/* Blue side - LEFT */}
           <div
             className="w-1/2 h-full bg-blue-500 flex items-center justify-center select-none"
             onMouseDown={handleBluePress}
@@ -196,8 +183,23 @@ export default function Home() {
             onTouchEnd={handleBlueRelease}
             style={{ touchAction: 'none' }}
           >
-            <span className="text-white text-9xl font-bold pointer-events-none">
+            <span className="text-white text-9xl font-bold pointer-events-none rotate-180">
               {blueScore}
+            </span>
+          </div>
+
+          {/* Red side - RIGHT */}
+          <div
+            className="w-1/2 h-full bg-red-500 flex items-center justify-center select-none"
+            onMouseDown={handleRedPress}
+            onMouseUp={handleRedRelease}
+            onMouseLeave={handleRedRelease}
+            onTouchStart={handleRedPress}
+            onTouchEnd={handleRedRelease}
+            style={{ touchAction: 'none' }}
+          >
+            <span className="text-white text-9xl font-bold pointer-events-none rotate-180">
+              {redScore}
             </span>
           </div>
         </div>
