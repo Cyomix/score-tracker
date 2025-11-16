@@ -7,32 +7,23 @@ export default function Home() {
   const [redScore, setRedScore] = useState(0);
   const [editingBlue, setEditingBlue] = useState(false);
   const [editingRed, setEditingRed] = useState(false);
+  const [editValue, setEditValue] = useState('');
 
   const blueHoldTimer = useRef<NodeJS.Timeout | null>(null);
   const redHoldTimer = useRef<NodeJS.Timeout | null>(null);
-  const blueInputRef = useRef<HTMLInputElement>(null);
-  const redInputRef = useRef<HTMLInputElement>(null);
+  const editInputRef = useRef<HTMLInputElement>(null);
   const shouldIncrementBlue = useRef(false);
   const shouldIncrementRed = useRef(false);
 
   // Focus input when editing mode is activated
   useEffect(() => {
-    if (editingBlue && blueInputRef.current) {
+    if ((editingBlue || editingRed) && editInputRef.current) {
       setTimeout(() => {
-        blueInputRef.current?.focus();
-        blueInputRef.current?.select();
+        editInputRef.current?.focus();
+        editInputRef.current?.select();
       }, 100);
     }
-  }, [editingBlue]);
-
-  useEffect(() => {
-    if (editingRed && redInputRef.current) {
-      setTimeout(() => {
-        redInputRef.current?.focus();
-        redInputRef.current?.select();
-      }, 100);
-    }
-  }, [editingRed]);
+  }, [editingBlue, editingRed]);
 
   const handleBluePress = (e: React.TouchEvent | React.MouseEvent) => {
     // Prevent mouse events if this is a touch device
@@ -44,6 +35,7 @@ export default function Home() {
     shouldIncrementBlue.current = true;
     blueHoldTimer.current = setTimeout(() => {
       shouldIncrementBlue.current = false;
+      setEditValue(blueScore.toString());
       setEditingBlue(true);
     }, 500);
   };
@@ -76,6 +68,7 @@ export default function Home() {
     shouldIncrementRed.current = true;
     redHoldTimer.current = setTimeout(() => {
       shouldIncrementRed.current = false;
+      setEditValue(redScore.toString());
       setEditingRed(true);
     }, 500);
   };
@@ -103,108 +96,110 @@ export default function Home() {
     setRedScore(0);
   };
 
-  const handleBlueEdit = (value: string) => {
-    const num = parseInt(value) || 0;
-    setBlueScore(num);
+  const handleEditChange = (value: string) => {
+    setEditValue(value);
   };
 
-  const handleRedEdit = (value: string) => {
-    const num = parseInt(value) || 0;
-    setRedScore(num);
+  const saveEdit = () => {
+    const num = parseInt(editValue) || 0;
+    if (editingBlue) {
+      setBlueScore(num);
+      setEditingBlue(false);
+    } else if (editingRed) {
+      setRedScore(num);
+      setEditingRed(false);
+    }
   };
 
-  const closeBlueEdit = () => {
+  const cancelEdit = () => {
     setEditingBlue(false);
-  };
-
-  const closeRedEdit = () => {
     setEditingRed(false);
   };
 
   return (
     <div className="h-screen w-screen flex flex-col overflow-hidden">
-      {/* Reset button */}
-      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10">
-        <button
-          onClick={handleReset}
-          className="bg-white text-gray-800 px-6 py-3 rounded-lg shadow-lg font-semibold hover:bg-gray-100 active:bg-gray-200 transition-colors"
-        >
-          Reset
-        </button>
-      </div>
-
-      {/* Score tracking area - vertical in portrait, horizontal in landscape */}
-      <div className="flex flex-col landscape:flex-row flex-1 h-full w-full">
-        {/* Blue side */}
+      {/* Modal for editing score */}
+      {(editingBlue || editingRed) && (
         <div
-          className="w-full h-1/2 landscape:w-1/2 landscape:h-full bg-blue-500 flex items-center justify-center select-none"
-          onMouseDown={handleBluePress}
-          onMouseUp={handleBlueRelease}
-          onMouseLeave={handleBlueRelease}
-          onTouchStart={handleBluePress}
-          onTouchEnd={handleBlueRelease}
-          style={{ touchAction: 'none' }}
+          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
+          onClick={cancelEdit}
         >
-          {editingBlue ? (
-            <div className="flex flex-col items-center gap-4" onClick={(e) => e.stopPropagation()}>
-              <input
-                ref={blueInputRef}
-                type="number"
-                inputMode="numeric"
-                value={blueScore}
-                onChange={(e) => handleBlueEdit(e.target.value)}
-                className="text-9xl font-bold text-center bg-transparent text-white border-4 border-white rounded-lg w-64 p-4 outline-none"
-              />
+          <div
+            className="bg-white rounded-2xl p-8 flex flex-col items-center gap-6 min-w-[320px]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-2xl font-bold text-gray-800">
+              Edit {editingBlue ? 'Blue' : 'Red'} Score
+            </h2>
+            <input
+              ref={editInputRef}
+              type="number"
+              inputMode="numeric"
+              value={editValue}
+              onChange={(e) => handleEditChange(e.target.value)}
+              className="text-6xl font-bold text-center border-4 border-gray-300 rounded-lg w-full p-4 outline-none focus:border-blue-500"
+            />
+            <div className="flex gap-4 w-full">
               <button
-                onMouseDown={(e) => e.stopPropagation()}
-                onTouchStart={(e) => e.stopPropagation()}
-                onClick={closeBlueEdit}
-                className="bg-white text-blue-500 px-6 py-3 rounded-lg font-semibold"
+                onClick={cancelEdit}
+                className="flex-1 bg-gray-200 text-gray-800 px-6 py-3 rounded-lg font-semibold hover:bg-gray-300 active:bg-gray-400 transition-colors"
               >
-                Done
+                Cancel
+              </button>
+              <button
+                onClick={saveEdit}
+                className={`flex-1 ${editingBlue ? 'bg-blue-500' : 'bg-red-500'} text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 active:opacity-75 transition-opacity`}
+              >
+                Save
               </button>
             </div>
-          ) : (
-            <span className="text-white text-9xl font-bold pointer-events-none">
-              {blueScore}
-            </span>
-          )}
+          </div>
+        </div>
+      )}
+
+      {/* Rotated container for portrait mode */}
+      <div className="h-full w-full portrait:rotate-90 portrait:w-screen portrait:h-screen">
+        {/* Reset button */}
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 portrait:-rotate-90">
+          <button
+            onClick={handleReset}
+            className="bg-white text-gray-800 px-6 py-3 rounded-lg shadow-lg font-semibold hover:bg-gray-100 active:bg-gray-200 transition-colors"
+          >
+            Reset
+          </button>
         </div>
 
-        {/* Red side */}
-        <div
-          className="w-full h-1/2 landscape:w-1/2 landscape:h-full bg-red-500 flex items-center justify-center select-none"
-          onMouseDown={handleRedPress}
-          onMouseUp={handleRedRelease}
-          onMouseLeave={handleRedRelease}
-          onTouchStart={handleRedPress}
-          onTouchEnd={handleRedRelease}
-          style={{ touchAction: 'none' }}
-        >
-          {editingRed ? (
-            <div className="flex flex-col items-center gap-4" onClick={(e) => e.stopPropagation()}>
-              <input
-                ref={redInputRef}
-                type="number"
-                inputMode="numeric"
-                value={redScore}
-                onChange={(e) => handleRedEdit(e.target.value)}
-                className="text-9xl font-bold text-center bg-transparent text-white border-4 border-white rounded-lg w-64 p-4 outline-none"
-              />
-              <button
-                onMouseDown={(e) => e.stopPropagation()}
-                onTouchStart={(e) => e.stopPropagation()}
-                onClick={closeRedEdit}
-                className="bg-white text-red-500 px-6 py-3 rounded-lg font-semibold"
-              >
-                Done
-              </button>
-            </div>
-          ) : (
+        {/* Score tracking area - always horizontal (red left, blue right) */}
+        <div className="flex flex-row h-full w-full">
+          {/* Red side - LEFT */}
+          <div
+            className="w-1/2 h-full bg-red-500 flex items-center justify-center select-none"
+            onMouseDown={handleRedPress}
+            onMouseUp={handleRedRelease}
+            onMouseLeave={handleRedRelease}
+            onTouchStart={handleRedPress}
+            onTouchEnd={handleRedRelease}
+            style={{ touchAction: 'none' }}
+          >
             <span className="text-white text-9xl font-bold pointer-events-none">
               {redScore}
             </span>
-          )}
+          </div>
+
+          {/* Blue side - RIGHT */}
+          <div
+            className="w-1/2 h-full bg-blue-500 flex items-center justify-center select-none"
+            onMouseDown={handleBluePress}
+            onMouseUp={handleBlueRelease}
+            onMouseLeave={handleBlueRelease}
+            onTouchStart={handleBluePress}
+            onTouchEnd={handleBlueRelease}
+            style={{ touchAction: 'none' }}
+          >
+            <span className="text-white text-9xl font-bold pointer-events-none">
+              {blueScore}
+            </span>
+          </div>
         </div>
       </div>
     </div>
