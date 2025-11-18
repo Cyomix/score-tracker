@@ -1,48 +1,63 @@
 import { useEffect, useRef, useState } from 'react';
 
+// Type declaration for NoSleep.js
+declare class NoSleep {
+  constructor();
+  enable(): Promise<void>;
+  disable(): void;
+  get isEnabled(): boolean;
+}
+
 export function useWakeLock() {
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
-  const [isSupported, setIsSupported] = useState(false);
-  const [isActive, setIsActive] = useState(false);
+  const noSleepRef = useRef<NoSleep | null>(null);
 
   useEffect(() => {
-    // Check if Wake Lock API is supported
-    const supported = 'wakeLock' in navigator;
-    setIsSupported(supported);
-
-    if (!supported) {
-      console.warn('Wake Lock API is not supported in this browser');
-      return;
-    }
+    const hasWakeLockAPI = 'wakeLock' in navigator;
 
     const requestWakeLock = async () => {
       try {
-        // Request a screen wake lock
-        wakeLockRef.current = await navigator.wakeLock.request('screen');
-        setIsActive(true);
+        if (hasWakeLockAPI) {
+          // Modern browsers: Use Wake Lock API
+          wakeLockRef.current = await navigator.wakeLock.request('screen');
+          console.log('Wake Lock API acquired - screen will stay awake');
 
-        console.log('Wake Lock acquired - screen will stay awake');
+          wakeLockRef.current.addEventListener('release', () => {
+            console.log('Wake Lock API released');
+          });
+        } else {
+          // iOS Safari and older browsers: Use NoSleep.js fallback
+          if (!noSleepRef.current) {
+            const NoSleep = (await import('nosleep.js')).default;
+            noSleepRef.current = new NoSleep();
+          }
 
-        // Listen for wake lock release
-        wakeLockRef.current.addEventListener('release', () => {
-          console.log('Wake Lock released');
-          setIsActive(false);
-        });
+          await noSleepRef.current.enable();
+          console.log('NoSleep.js enabled - screen will stay awake');
+        }
       } catch (err) {
-        console.error('Failed to acquire Wake Lock:', err);
-        setIsActive(false);
+        console.error('Failed to acquire wake lock:', err);
       }
     };
 
     const handleVisibilityChange = () => {
       // Re-acquire wake lock when page becomes visible again
-      if (wakeLockRef.current !== null && document.visibilityState === 'visible') {
+      if (document.visibilityState === 'visible') {
         requestWakeLock();
       }
     };
 
-    // Request wake lock on mount
-    requestWakeLock();
+    // Enable wake lock on user interaction (required for iOS)
+    const enableOnInteraction = () => {
+      requestWakeLock();
+      // Remove listeners after first interaction
+      document.removeEventListener('touchstart', enableOnInteraction);
+      document.removeEventListener('mousedown', enableOnInteraction);
+    };
+
+    // Wait for user interaction before enabling wake lock
+    document.addEventListener('touchstart', enableOnInteraction, { once: true });
+    document.addEventListener('mousedown', enableOnInteraction, { once: true });
 
     // Re-request wake lock when page visibility changes
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -50,16 +65,21 @@ export function useWakeLock() {
     // Cleanup: release wake lock on unmount
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener('touchstart', enableOnInteraction);
+      document.removeEventListener('mousedown', enableOnInteraction);
 
       if (wakeLockRef.current !== null) {
         wakeLockRef.current.release().then(() => {
           wakeLockRef.current = null;
-          setIsActive(false);
-          console.log('Wake Lock released on cleanup');
+          console.log('Wake Lock API released on cleanup');
         });
+      }
+
+      if (noSleepRef.current) {
+        noSleepRef.current.disable();
+        noSleepRef.current = null;
+        console.log('NoSleep.js disabled on cleanup');
       }
     };
   }, []);
-
-  return { isSupported, isActive };
 }
