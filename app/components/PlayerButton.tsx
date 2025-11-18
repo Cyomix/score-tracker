@@ -36,7 +36,7 @@ export function PlayerButton({
 
   return (
     <button
-      className={`w-1/2 h-full ${bgColor} flex flex-col items-center justify-center select-none relative focus:outline-none focus-visible:outline focus-visible:outline-4 ${focusOutline} focus-visible:outline-offset-[-8px] transition-transform duration-75 ${isPressing ? 'scale-[0.98]' : 'scale-100'}`}
+      className={`w-1/2 h-full ${bgColor} flex flex-col items-center justify-center select-none relative focus:outline-none focus-visible:outline focus-visible:outline-4 ${focusOutline} focus-visible:outline-offset-[-8px] transition-transform duration-75 ${isPressing ? 'scale-[0.995]' : 'scale-100'}`}
       onPointerDown={onPointerDown}
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerCancel}
@@ -48,14 +48,15 @@ export function PlayerButton({
     >
       {/* Player label */}
       <div
-        className={`absolute ${isPortrait ? 'top-8 rotate-180' : 'bottom-8'} text-white text-player-label font-bold drop-shadow-lg`}
+        className={`absolute ${isPortrait ? 'top-8 rotate-180' : 'bottom-8'} text-white text-player-label font-bold opacity-75`}
+        style={{ transform: 'translateY(25%)' }}
       >
         {playerLabel}
       </div>
 
       {/* Active state overlay */}
       {isPressing && (
-        <div className="absolute inset-0 bg-black/5 pointer-events-none" />
+        <div className="absolute inset-0 bg-black/3 pointer-events-none transition-opacity duration-75" />
       )}
 
       {/* Hold progress indicator */}

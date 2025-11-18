@@ -191,17 +191,17 @@ export default function Home() {
               top: isPortrait ? '50%' : 'auto',
             }}
           >
-            {/* Reset button */}
+            {/* Reset button - circular with icon */}
             <div className={`absolute ${isPortrait ? 'top-4' : 'bottom-8'} left-1/2 -translate-x-1/2 z-10`}>
               <button
                 onClick={handleReset}
-                className="bg-white text-gray-800 px-5 py-3 rounded-full shadow-lg hover:bg-gray-100 active:bg-gray-200 transition-colors focus:outline-none focus-visible:outline focus-visible:outline-4 focus-visible:outline-blue-500 flex items-center gap-2.5"
+                className="bg-white text-gray-800 p-4 rounded-full shadow-lg hover:bg-gray-100 active:bg-gray-200 transition-colors focus:outline-none focus-visible:outline focus-visible:outline-4 focus-visible:outline-blue-500"
                 aria-label="Reset scores"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  width="18"
-                  height="18"
+                  width="24"
+                  height="24"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
